@@ -1,8 +1,10 @@
-# Blog OS (Async/Await)
+# Blog OS (Async/Await) + Virtual Filesystem
 
 [![Build Status](https://github.com/phil-opp/blog_os/workflows/Code/badge.svg?branch=post-12)](https://github.com/phil-opp/blog_os/actions?query=workflow%3A%22Code%22+branch%3Apost-12)
 
-This repository contains the source code for the [Async/Await][post] post of the [Writing an OS in Rust](https://os.phil-opp.com) series.
+This repository contains the source code for the Virtual Filesystem on top of the original [Async/Await][post] post of the [Writing an OS in Rust](https://os.phil-opp.com) series.
+
+The main files for filesystems are found in /src/fs.
 
 [post]: https://os.phil-opp.com/async-await/
 
