@@ -1,12 +1,10 @@
-# Blog OS
+# Blog OS with a Virtual Filesystem
 
-This repository contains the source code for the _Writing an OS in Rust_ series at [os.phil-opp.com](https://os.phil-opp.com).
-
-If you have questions, open an issue or chat with us [on Gitter](https://gitter.im/phil-opp/blog_os).
+This repository is a fork of the source code for the _Writing an OS in Rust_ series at [os.phil-opp.com](https://os.phil-opp.com).
 
 ## Where is the code?
 
-The code for each post lives in a separate git branch. This makes it possible to see the intermediate state after each post.
+branch -> post-12
 
 **The code for the latest post is available [here][latest-post].**
 
