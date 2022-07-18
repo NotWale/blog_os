@@ -10,6 +10,9 @@ use futures_util::{
     task::AtomicWaker,
 };
 use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
+use alloc::string::String;
+use crate::alloc::string::ToString;
+use crate::fs;
 
 static SCANCODE_QUEUE: OnceCell<ArrayQueue<u8>> = OnceCell::uninit();
 static WAKER: AtomicWaker = AtomicWaker::new();
@@ -67,15 +70,32 @@ impl Stream for ScancodeStream {
 }
 
 pub async fn print_keypresses() {
+    print!("~{}$ ", fs::svfs::getcurpath());
     let mut scancodes = ScancodeStream::new();
     let mut keyboard = Keyboard::new(layouts::Us104Key, ScancodeSet1, HandleControl::Ignore);
+    let mut ch = '0';
+    let mut msg: String = "".to_string();
 
     while let Some(scancode) = scancodes.next().await {
         if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
             if let Some(key) = keyboard.process_keyevent(key_event) {
                 match key {
-                    DecodedKey::Unicode(character) => print!("{}", character),
-                    DecodedKey::RawKey(key) => print!("{:?}", key),
+                    DecodedKey::Unicode(character) => { print!("{}", character); ch = character; }, //printing the input character from kb (incl. enter)
+                    DecodedKey::RawKey(key) => (), //not printing the special input character from kb
+                }
+
+                // check for enter presses
+                if scancode == 28 {
+                    fs::svfs::execute_cmd(msg.clone());
+                    msg = "".to_string();
+                    print!("~{}$ ", fs::svfs::getcurpath()); 
+                }
+                else { msg.push(ch); }
+                                
+                //remove last char by pressing backspace
+                if scancode == 14 {
+                    if msg.chars().count()>1 { msg.pop(); msg.pop(); }
+                    print!("\n~{}$ {}", fs::svfs::getcurpath(), msg);
                 }
             }
         }

@@ -1,8 +1,10 @@
 #![no_std]
 #![no_main]
 #![feature(custom_test_frameworks)]
+#![feature(str_split_as_str)]
 #![test_runner(blog_os::test_runner)]
 #![reexport_test_harness_main = "test_main"]
+#[allow(dead_code)]
 
 extern crate alloc;
 
@@ -15,6 +17,7 @@ entry_point!(kernel_main);
 
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
     use blog_os::allocator;
+    use blog_os::fs;
     use blog_os::memory::{self, BootInfoFrameAllocator};
     use x86_64::VirtAddr;
 
@@ -27,11 +30,31 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 
     allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
 
+    //Filesystem init
+    fs::svfs::init_vfs();
+    //ProcFS Mount
+    fs::procfs::init_procfs();  
+    //testFS Mount for testing purposes
+    fs::sysfs::init_sysfs(); 
+
+    println!("Commands:");
+    println!("mkdir <dirname> - Create new directory");
+    println!("touch <filename> - Create new file");
+    println!("read <filename> - Read a file");
+    println!("write <filename> <text> - Write to a file");
+    println!("cd <dirname> - Change directory");
+    println!("ls - Display all files and directories in the current folder");
+    println!("rmd <dirname> - Delete directory");
+    println!("rmf <filename> - Delete file");
+    println!("getinfo - Display info about current filesystem");
+    println!("getpath - Show path inode number");
+    println!("You can change the text and background color in proc/color");
+  
     #[cfg(test)]
     test_main();
 
     let mut executor = Executor::new();
-    executor.spawn(Task::new(example_task()));
+    //executor.spawn(Task::new(example_task()));
     executor.spawn(Task::new(keyboard::print_keypresses()));
     executor.run();
 }

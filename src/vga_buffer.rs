@@ -2,6 +2,11 @@ use core::fmt;
 use lazy_static::lazy_static;
 use spin::Mutex;
 use volatile::Volatile;
+use alloc::string::String;
+use crate::alloc::borrow::ToOwned;
+use core::sync::atomic::{AtomicBool, Ordering};
+
+pub static SWITCHCOLOR: AtomicBool = AtomicBool::new(false);
 
 lazy_static! {
     /// A global `Writer` instance that can be used for printing to the VGA text buffer.
@@ -12,6 +17,11 @@ lazy_static! {
         color_code: ColorCode::new(Color::Yellow, Color::Black),
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
     });
+
+    //pub static ref FGCOLOR: String = String::from("YELLOW");
+    //pub static ref BGCOLOR: String = String::from("BLACK");
+    pub static ref FGCOLOR: Mutex<String> = Mutex::new(String::new());
+    pub static ref BGCOLOR: Mutex<String> = Mutex::new(String::new());
 }
 
 /// The standard color palette in VGA text mode.
@@ -103,6 +113,54 @@ impl Writer {
         }
     }
 
+    // trying to change color...
+    pub fn change_color(&mut self) {
+
+        let c1 = &*FGCOLOR.lock();
+        let c2 = &*BGCOLOR.lock();
+        let color1 = match c1.as_str() {
+            "Black"  => Color::Black,
+            "Blue"  => Color::Blue,
+            "Cyan"  => Color::Cyan,
+            "Red"  => Color::Red,
+            "Magenta" => Color::Magenta,
+            "Brown"  => Color::Brown,
+            "LightGray"  => Color::LightGray,
+            "DarkGray"  => Color::DarkGray,
+            "LightBlue"  => Color::LightBlue,
+            "LightGreen"  => Color::LightGreen,
+            "LightCyan"  => Color::LightCyan,
+            "LightRed"  => Color::LightRed,
+            "Pink"  => Color::Pink,
+            "Yellow"  => Color::Yellow,
+            "White"  => Color::White,
+            _      => Color::Yellow,
+            };            
+              
+        let color2 = match c2.as_str() {
+                "Black"  => Color::Black,
+                "Blue"  => Color::Blue,
+                "Cyan"  => Color::Cyan,
+                "Red"  => Color::Red,
+                "Magenta" => Color::Magenta,
+                "Brown"  => Color::Brown,
+                "LightGray"  => Color::LightGray,
+                "DarkGray"  => Color::DarkGray,
+                "LightBlue"  => Color::LightBlue,
+                "LightGreen"  => Color::LightGreen,
+                "LightCyan"  => Color::LightCyan,
+                "LightRed"  => Color::LightRed,
+                "Pink"  => Color::Pink,
+                "Yellow"  => Color::Yellow,
+                "White"  => Color::White,
+                _      => Color::Black,
+                //_      => Err(()),
+            };
+
+            self.color_code = ColorCode::new(color1, color2);
+            //self.color_code = ColorCode::new(Color::Blue, Color::Green);
+    }
+
     /// Writes the given ASCII string to the buffer.
     ///
     /// Wraps lines at `BUFFER_WIDTH`. Supports the `\n` newline character. Does **not**
@@ -146,6 +204,7 @@ impl Writer {
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
+        if SWITCHCOLOR.load(Ordering::Relaxed) { SWITCHCOLOR.store(false, Ordering::Relaxed); self.change_color(); }
         Ok(())
     }
 }

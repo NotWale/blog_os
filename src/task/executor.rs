@@ -3,6 +3,8 @@ use alloc::{collections::BTreeMap, sync::Arc, task::Wake};
 use core::task::{Context, Poll, Waker};
 use crossbeam_queue::ArrayQueue;
 
+pub static mut UPTIME: i32 = 0;
+
 pub struct Executor {
     tasks: BTreeMap<TaskId, Task>,
     task_queue: Arc<ArrayQueue<TaskId>>,
@@ -27,9 +29,12 @@ impl Executor {
     }
 
     pub fn run(&mut self) -> ! {
+        let mut time = 0;
         loop {
             self.run_ready_tasks();
             self.sleep_if_idle();
+            // This is a horrible way of counting the current time up in seconds, but it sure gives the illusion of it
+            unsafe { time = time + 1; if time == 18 {UPTIME = UPTIME + 1; time = 0; }; } 
         }
     }
 
